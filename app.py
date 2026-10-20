@@ -133,7 +133,7 @@ def signup():
 
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
-    data = request.get_json() as dict if hasattr(request, 'get_json') else request.get_json() or {}
+    data = request.get_json() or {}
     identifier = data.get('identifier')
     identifier = identifier.strip() if identifier else ''
     
