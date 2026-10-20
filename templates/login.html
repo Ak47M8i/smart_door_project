@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Door - Access</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: #1e293b;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 320px;
+        }
+        h2 { margin-bottom: 20px; color: #38bdf8; }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: white;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #38bdf8;
+            color: #0f172a;
+            margin-top: 10px;
+        }
+        button:hover { opacity: 0.9; }
+        .error { color: #ef4444; font-size: 0.9rem; margin-bottom: 10px; }
+        .success { color: #22c55e; font-size: 0.9rem; margin-bottom: 10px; }
+        .link { color: #38bdf8; font-size: 0.85rem; cursor: pointer; margin-top: 15px; display: block; text-decoration: underline; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2 id="formTitle">Smart Door Login</h2>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <div id="messageArea"></div>
+        
+        <!-- Login Form -->
+        <form method="POST" id="loginForm">
+            <input type="text" name="identifier" placeholder="Email or Phone Number" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Access System</button>
+            <a class="link" onclick="switchView('signup')">Create a New Account</a>
+            <a class="link" onclick="switchView('forgot')">Forgot Password?</a>
+        </form>
+
+        <!-- Sign-Up Form -->
+        <div id="signupSection" class="hidden" style="text-align: left;">
+            <input type="email" id="signupEmail" placeholder="Email Address" required>
+            <input type="text" id="signupPhone" placeholder="Phone Number" required>
+            <input type="password" id="signupPassword" placeholder="Create Password" required>
+            <button onclick="registerUser()" style="background-color: #22c55e; color: white;">Sign Up</button>
+            <a class="link" onclick="switchView('login')">Already have an account? Login</a>
+        </div>
+
+        <!-- Forgot Password Section -->
+        <div id="forgotSection" class="hidden" style="text-align: left;">
+            <input type="text" id="recoveryIdentifier" placeholder="Enter Email or Phone Number" required>
+            <button onclick="recoverPassword()" style="background-color: #eab308; color: #0f172a;">Recover Password</button>
+            <a class="link" onclick="switchView('login')">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        function switchView(view) {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupSection').classList.add('hidden');
+            document.getElementById('forgotSection').classList.add('hidden');
+            document.getElementById('messageArea').innerText = '';
+
+            const title = document.getElementById('formTitle');
+
+            if (view === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                title.innerText = "Smart Door Login";
+            } else if (view === 'signup') {
+                document.getElementById('signupSection').classList.remove('hidden');
+                title.innerText = "Create Account";
+            } else if (view === 'forgot') {
+                document.getElementById('forgotSection').classList.remove('hidden');
+                title.innerText = "Password Recovery";
+            }
+        }
+
+        function registerUser() {
+            const email = document.getElementById('signupEmail').value;
+            const phone = document.getElementById('signupPhone').value;
+            const password = document.getElementById('signupPassword').value;
+            const msgArea = document.getElementById('messageArea');
+
+            fetch('/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, phone: phone, password: password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    msgArea.className = 'success';
+                    msgArea.innerText = data.message;
+                    setTimeout(() => switchView('login'), 2000);
+                } else {
+                    msgArea.className = 'error';
+                    msgArea.innerText = data.error;
+                }
+            });
+        }
+
+        function recoverPassword() {
+            const identifier = document.getElementById('recoveryIdentifier').value;
+            const msgArea = document.getElementById('messageArea');
+
+            fetch('/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier: identifier })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    msgArea.className = 'success';
+                    msgArea.innerText = data.message;
+                } else {
+                    msgArea.className = 'error';
+                    msgArea.innerText = data.error;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

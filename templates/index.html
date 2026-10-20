@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Door Control</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: #1e293b;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 320px;
+        }
+        h2 { margin-bottom: 20px; color: #38bdf8; }
+        .status-badge {
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+        .CLOSED { background-color: #ef4444; color: white; }
+        .OPEN { background-color: #22c55e; color: white; }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:active { opacity: 0.8; }
+        .btn-unlock { background-color: #22c55e; color: white; }
+        .btn-lock { background-color: #ef4444; color: white; }
+        .logout-link { color: #94a3b8; font-size: 0.9rem; text-decoration: underline; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Smart Door System</h2>
+        <div>
+            <span id="statusBadge" class="status-badge {{ status }}">{{ status }}</span>
+        </div>
+        <div class="btn-group">
+            <button class="btn-unlock" onclick="sendControl('UNLOCK')">Unlock</button>
+            <button class="btn-lock" onclick="sendControl('LOCK')">Lock</button>
+        </div>
+        <a href="/logout" class="logout-link">Lock Session / Logout</a>
+    </div>
+
+    <script>
+        function sendControl(command) {
+            fetch('/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && !data.success) {
+                    alert('Error executing command');
+                }
+            });
+        }
+
+        // Poll door status every second
+        setInterval(() => {
+            fetch('/status')
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status) {
+                    const badge = document.getElementById('statusBadge');
+                    badge.innerText = data.status;
+                    badge.className = 'status-badge ' + data.status;
+                }
+            });
+        }, 1000);
+    </script>
+</body>
+</html>
