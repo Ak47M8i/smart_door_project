@@ -20,7 +20,7 @@ def find_arduino_port():
     if ports:
         print(f"Fallback to available port: {ports[0].device}")
         return ports[0].device
-    return 'COM3'
+    return 'COM6'
 
 PORT = find_arduino_port()
 BAUD = 9600
